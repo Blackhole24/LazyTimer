@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     /**
-     * Method for Starting and stopping the Timer
+     * Method for Starting the timer
      */
 
     private void startTimer() {
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int seconds = (int) (mTimeLeftInMillis / 1000) % 60;
 
         if (seconds == 59){
-            createNotif();
+            createNotif(); //notifies user in the app when 1 minute is over/left on the timer
 
         }
 
@@ -324,6 +324,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    /**
+     * Method for when Timer is stopped. Saves how much time is still left on the timer
+     */
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -342,6 +346,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             mCountDownTimer.cancel();
         }
     }
+
+    /**
+     * Method saving the data via SharedPrefs. so that timer can tun in background
+     */
 
     @Override
     protected void onStart() {
@@ -373,6 +381,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    /**
+     * Method for creating and sending modern-looking "Hovering Notifications" in the app.
+     */
 
     private void createNotif()
     {
@@ -405,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 .setContentText("Only 1 Minute left")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setVibrate(new long[]{100,1000,200,340})
-                .setAutoCancel(false)//true touch on notificaiton menu dismissed, but swipe to dismiss
+                .setAutoCancel(false)
                 .setTicker("Notification");
         builder.setContentIntent(contentIntent);
         NotificationManagerCompat m = NotificationManagerCompat.from(getApplicationContext());
