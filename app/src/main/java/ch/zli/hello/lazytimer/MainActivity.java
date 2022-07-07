@@ -16,8 +16,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-
 import java.util.Locale;
+
 
 
 /**
@@ -26,20 +26,28 @@ import java.util.Locale;
  * https://gist.github.com/codinginflow/ad9042bdaa712bdbc361a0b697179367
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private EditText mEditTextInput;
     private TextView mTextViewCountDown;
     private Button mButtonSet;
     private Button mButtonStartPause;
     private Button mButtonReset;
+    private final static int SAMPLING_RATE = 1000000000 ;
+    private final static int DISPLAY_PERIOD = 30; // in seconds
+    private final static int CHART_ENTRIES_LIMIT = SAMPLING_RATE / 10000 * DISPLAY_PERIOD;
+
 
     private CountDownTimer mCountDownTimer;
 
-    private boolean mTimerRunning;
+    private boolean mTimerRunning = false;
 
     private long mStartTimeInMillis;
     private long mTimeLeftInMillis;
     private long mEndTime;
+
+    private long mShakeTimestamp;
+    private static final int SHAKE_SLOP_TIME_MS = 1000;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,8 +115,63 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        Sensor sensorShake = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+
+
+        SensorEventListener sensorEventListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent sensorEvent) {
+                if (sensorEvent != null) {
+                    float x_accl = sensorEvent.values[0];
+                    float y_accl = sensorEvent.values[1];
+                    float z_accl = sensorEvent.values[2];
+
+
+
+
+                    if (x_accl > 2 ||
+                            x_accl < -2 ||
+                            y_accl > 12 ||
+                            y_accl < -12 ||
+                            z_accl > 2 ||
+                            z_accl < -2) {
+
+                        final long now = System.currentTimeMillis();
+                        // ignore shake events too close to each other (500ms)
+                        if (mShakeTimestamp + SHAKE_SLOP_TIME_MS > now) {
+                            return;
+                        }
+
+
+                        if(mTimerRunning) {
+                            pauseTimer();
+
+                        } else {
+                            startTimer();
+
+                        }
+                        mShakeTimestamp = now;
+                    } else {
+
+                    }
+
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+
+            }
+        };
+
+        sensorManager.registerListener(sensorEventListener, sensorShake, SensorManager.SENSOR_DELAY_FASTEST, SAMPLING_RATE);
+
 
     }
+
 
     private void setTime(long milliseconds) {
         mStartTimeInMillis = milliseconds;
@@ -272,5 +335,15 @@ public class MainActivity extends AppCompatActivity {
                 startTimer();
             }
         }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 }
