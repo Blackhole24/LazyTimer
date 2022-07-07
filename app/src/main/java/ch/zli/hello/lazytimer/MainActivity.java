@@ -1,7 +1,17 @@
 package ch.zli.hello.lazytimer;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.content.SharedPreferences;
@@ -17,24 +27,38 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import java.util.Locale;
-
+import java.util.Random;
 
 
 /**
+ * Author: Danial Vaezi
+ * Date: 07:07:2022
+ * :Desccription: Timer Application called Lazy Timer. Timer can be started and stopped with a shake of the phone and
+ * you receive notifications when the timer is up
+ *
  * Main Timer Logic written by "codinginflow" on github.
  * Source:
  * https://gist.github.com/codinginflow/ad9042bdaa712bdbc361a0b697179367
+ *
+ * Shake and sensor detection Logic inspired from:
+ * https://demonuts.com/android-shake-detection/
+ *
+ * Notification Logic by "Cambo Tutorial" on Youtube.
+ * https://www.youtube.com/watch?v=v1s36wmqP8M
+ *
  */
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
+    /**
+     * Declaring Attributes
+     */
+
     private EditText mEditTextInput;
     private TextView mTextViewCountDown;
     private Button mButtonSet;
     private Button mButtonStartPause;
     private Button mButtonReset;
-    private final static int SAMPLING_RATE = 1000000000 ;
-    private final static int DISPLAY_PERIOD = 30; // in seconds
-    private final static int CHART_ENTRIES_LIMIT = SAMPLING_RATE / 10000 * DISPLAY_PERIOD;
 
 
     private CountDownTimer mCountDownTimer;
@@ -130,7 +154,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     float z_accl = sensorEvent.values[2];
 
 
-
+                    /**
+                     * if statement checks sensors for movement/shaking
+                     */
 
                     if (x_accl > 2 ||
                             x_accl < -2 ||
@@ -145,6 +171,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             return;
                         }
 
+                        /**
+                         * Starts/stops the timer after shaking
+                         */
 
                         if(mTimerRunning) {
                             pauseTimer();
@@ -167,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         };
 
-        sensorManager.registerListener(sensorEventListener, sensorShake, SensorManager.SENSOR_DELAY_FASTEST, SAMPLING_RATE);
+        sensorManager.registerListener(sensorEventListener, sensorShake, SensorManager.SENSOR_DELAY_FASTEST);
 
 
     }
@@ -234,6 +263,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int hours = (int) (mTimeLeftInMillis / 1000) / 3600;
         int minutes = (int) ((mTimeLeftInMillis / 1000) % 3600) / 60;
         int seconds = (int) (mTimeLeftInMillis / 1000) % 60;
+
+        if (seconds == 59){
+            createNotif();
+
+        }
 
         String timeLeftFormatted;
         if (hours > 0) {
@@ -322,6 +356,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         updateCountDownText();
         updateWatchInterface();
 
+
+
         if (mTimerRunning) {
             mEndTime = prefs.getLong("endTime", 0);
             mTimeLeftInMillis = mEndTime - System.currentTimeMillis();
@@ -337,6 +373,48 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+
+    private void createNotif()
+    {
+        String id = "my_channel_id_01";
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            NotificationChannel channel =manager.getNotificationChannel(id);
+            if(channel ==null)
+            {
+                channel = new NotificationChannel(id,"Channel Title", NotificationManager.IMPORTANCE_HIGH);
+                //config nofication channel
+                channel.setDescription("[Channel description]");
+                channel.enableVibration(true);
+                channel.setVibrationPattern(new long[]{100,1000,200,340});
+                channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                manager.createNotificationChannel(channel);
+            }
+        }
+        Intent notificationIntent = new Intent(this,NoficationActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent contentIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this,id)
+                .setSmallIcon(R.drawable.icon)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.bg))
+                .setStyle(new NotificationCompat.BigPictureStyle()
+                        .bigPicture(BitmapFactory.decodeResource(getResources(),R.drawable.bg))
+                        .bigLargeIcon(null))
+                .setContentTitle("Timer Alert")
+                .setContentText("Only 1 Minute left")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setVibrate(new long[]{100,1000,200,340})
+                .setAutoCancel(false)//true touch on notificaiton menu dismissed, but swipe to dismiss
+                .setTicker("Notification");
+        builder.setContentIntent(contentIntent);
+        NotificationManagerCompat m = NotificationManagerCompat.from(getApplicationContext());
+        //id to generate new notification in list notifications menu
+        m.notify(new Random().nextInt(),builder.build());
+
+    }
+
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
@@ -346,4 +424,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
+
 }

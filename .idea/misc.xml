@@ -3,7 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/danvae/AndroidStudioProjects/LazyTimer/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.193" />
+        <entry key="..\:/Users/danvae/AndroidStudioProjects/LazyTimer/app/src/main/res/drawable/ic_launcher_background.xml" value="0.193" />
         <entry key="..\:/Users/danvae/AndroidStudioProjects/LazyTimer/app/src/main/res/layout/activity_main.xml" value="0.17831813576494426" />
+        <entry key="..\:/Users/danvae/AndroidStudioProjects/LazyTimer/app/src/main/res/layout/activity_nofication.xml" value="0.1762917933130699" />
         <entry key="..\:/Users/danvae/AndroidStudioProjects/LazyTimer/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.196" />
       </map>
     </option>
