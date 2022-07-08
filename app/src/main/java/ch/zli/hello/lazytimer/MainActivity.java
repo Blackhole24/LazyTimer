@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int minutes = (int) ((mTimeLeftInMillis / 1000) % 3600) / 60;
         int seconds = (int) (mTimeLeftInMillis / 1000) % 60;
 
-        if (seconds == 59){
+        if (seconds == 59 && hours == 0 && minutes == 0){
             createNotif(); //notifies user in the app when 1 minute is over/left on the timer
 
         }
